@@ -1,12 +1,19 @@
 package com.example.compose.rally
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.printToLog
 import com.example.compose.rally.ui.components.RallyTopAppBar
 import org.junit.Rule
@@ -188,5 +195,44 @@ class TopAppBarTest {
         /* END-5 */
     }
     /* END-4 */
+
+    /* BEGIN-7 - Optional excercise */
+    // Verify that clicking on the different tabs of the RallyTopAppBar changes
+    // the selection.
+    @Test
+    fun rallyTopAppBarTest_clickedTabSelected() {
+        composeTestRule.setContent {
+            var currentScreen by rememberSaveable {
+                mutableStateOf(RallyScreen.Overview)
+            }
+
+            RallyTopAppBar(
+                allScreens = RallyScreen.entries,
+                onTabSelected = { screen -> currentScreen = screen },
+                currentScreen = currentScreen
+            )
+        }
+
+        composeTestRule
+            .onNodeWithContentDescription(RallyScreen.Overview.name)
+            .assert(isSelected()) { "Initial" }
+
+        composeTestRule
+            .onNodeWithContentDescription(RallyScreen.Accounts.name)
+            .performClick()
+            .assert(isSelected()) { RallyScreen.Accounts.name }
+
+        composeTestRule
+            .onNodeWithContentDescription(RallyScreen.Bills.name)
+            .performClick()
+            .assert(isSelected()) { RallyScreen.Bills.name }
+
+        composeTestRule
+            .onNodeWithContentDescription(RallyScreen.Overview.name)
+            .performClick()
+            .assert(isSelected()) { RallyScreen.Overview.name }
+    }
+    /* END-7 */
+
 }
 /* END-3.2 */
