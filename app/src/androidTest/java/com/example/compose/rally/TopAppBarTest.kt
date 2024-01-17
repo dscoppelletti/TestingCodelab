@@ -1,6 +1,9 @@
 package com.example.compose.rally
 
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasParent
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onRoot
@@ -69,7 +72,15 @@ class TopAppBarTest {
             )
         }
 
-        composeTestRule.onRoot().printToLog("currentLabelExists")
+        /* BEGIN-5 - Merged and unmerged Semantics trees */
+        // Compose exposes these Semantics properties automatically in some
+        // composables such as Text. You can also customize and merge them to
+        // represent a single component made up of one or multiple descendants.
+        // For example: you can represent a Button containing a Text composable.
+        // The property MergeDescendants = 'true' is telling us that this node
+        // had descendants, but they have been merged into it. In tests we
+        // oftentimes need to access all nodes.
+        // composeTestRule.onRoot().printToLog("currentLabelExists")
 // 01-17 17:07:16.204 23674 23695 D currentLabelExists: printToLog:
 // Printing with useUnmergedTree = 'false'
 // Node #1 at (l=0.0, t=63.0, r=1080.0, b=210.0)px
@@ -101,6 +112,45 @@ class TopAppBarTest {
 //    Actions = [OnClick, RequestFocus]
 //    MergeDescendants = 'true'
 //    ClearAndSetSemantics = 'true'
+        composeTestRule.onRoot(useUnmergedTree = true)
+            .printToLog("currentLabelExists")
+// Both nodes #4 and #10 still have no descendants, but node 6, the selected
+// tab, has one and we can now see the ‘Text' property.
+// 01-17 17:38:35.205 24420 24441 D currentLabelExists: printToLog:
+// Printing with useUnmergedTree = 'true'
+// Node #1 at (l=0.0, t=63.0, r=1080.0, b=210.0)px
+//  |-Node #2 at (l=0.0, t=63.0, r=1080.0, b=210.0)px
+//    IsTraversalGroup = 'true'
+//     |-Node #3 at (l=0.0, t=63.0, r=1080.0, b=210.0)px
+//       [SelectableGroup]
+//        |-Node #4 at (l=42.0, t=105.0, r=105.0, b=168.0)px
+//        | ContentDescription = '[Overview]'
+//        | Selected = 'false'
+//        | Role = 'Tab'
+//        | Focused = 'false'
+//        | Actions = [OnClick, RequestFocus]
+//        | MergeDescendants = 'true'
+//        | ClearAndSetSemantics = 'true'
+//        |-Node #6 at (l=189.0, t=105.0, r=469.0, b=168.0)px
+//        | ContentDescription = '[Accounts]'
+//        | Selected = 'true'
+//        | Role = 'Tab'
+//        | Focused = 'false'
+//        | Actions = [OnClick, RequestFocus]
+//        | MergeDescendants = 'true'
+//        | ClearAndSetSemantics = 'true'
+//        |  |-Node #9 at (l=284.0, t=105.0, r=469.0, b=154.0)px
+//        |    Text = '[ACCOUNTS]'
+//        |    Actions = [GetTextLayoutResult]
+//        |-Node #10 at (l=553.0, t=105.0, r=616.0, b=168.0)px
+//          ContentDescription = '[Bills]'
+//          Selected = 'false'
+//          Role = 'Tab'
+//          Focused = 'false'
+//          Actions = [OnClick, RequestFocus]
+//          MergeDescendants = 'true'
+//          ClearAndSetSemantics = 'true'
+        /* END-5 */
 
         // Composables don't have IDs and you can't use the Node numbers shown
         // in the tree to match them. If matching a node with its semantics
@@ -116,9 +166,26 @@ class TopAppBarTest {
         // If you look at the Semantics tree closely, the content descriptions
         // of all three tabs are there whether or not their tab is selected. We
         // must go deeper!
+        /* BEGIN-5 - Merged and unmerged Semantics trees */
+//        composeTestRule
+//            .onNodeWithContentDescription(RallyScreen.Accounts.name)
+//            .assertExists()
         composeTestRule
-            .onNodeWithContentDescription(RallyScreen.Accounts.name)
+            .onNode(
+                hasText(RallyScreen.Accounts.name.uppercase()) and
+                        // In this case, strictly, you don't have to add the
+                        // parent to the matcher because it's a very isolated
+                        // test. However, it's a good idea to avoid using broad
+                        // finders alone (such as hasText) which might fail in
+                        // larger tests (when other instances of the text might
+                        // be found).
+                        hasParent(
+                            hasContentDescription(RallyScreen.Accounts.name)
+                        ),
+                useUnmergedTree = true
+            )
             .assertExists()
+        /* END-5 */
     }
     /* END-4 */
 }
