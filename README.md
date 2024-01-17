@@ -8,6 +8,7 @@ codelab.
 
 * [Testing documentation](http://developer.android.com/jetpack/compose/testing)
 * [Compose Testing Cheat Sheet](http://developer.android.com/jetpack/compose/testing-cheatsheet)
+* [Infinite animations](http://developer.android.com/jetpack/compose/animation#rememberinfinitetransition)
 
 ## License
 ```

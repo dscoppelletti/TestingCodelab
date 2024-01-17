@@ -16,7 +16,12 @@
 
 package com.example.compose.rally.ui.overview
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateValue
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +55,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.compose.rally.R
 import com.example.compose.rally.RallyScreen
@@ -95,23 +101,43 @@ private fun AlertCard() {
         )
     }
 
-    var currentTargetElevation by remember { mutableStateOf(1.dp) }
-    LaunchedEffect(Unit) {
-        // Start the animation
-        currentTargetElevation = 8.dp
-    }
-    val animatedElevation = animateDpAsState(
-        targetValue = currentTargetElevation,
-        animationSpec = tween(durationMillis = 500),
-        finishedListener = {
-            currentTargetElevation = if (currentTargetElevation > 4.dp) {
-                1.dp
-            } else {
-                8.dp
-            }
-        }, label = "AlertCard"
+    /* BEGIN-6 - Synchronization */
+    // This code is essentially waiting for an animation to finish
+    // (finishedListener) and then runs it again.
+//    var currentTargetElevation by remember { mutableStateOf(1.dp) }
+//    LaunchedEffect(Unit) {
+//        // Start the animation
+//        currentTargetElevation = 8.dp
+//    }
+//    val animatedElevation = animateDpAsState(
+//        targetValue = currentTargetElevation,
+//        animationSpec = tween(durationMillis = 500),
+//        finishedListener = {
+//            currentTargetElevation = if (currentTargetElevation > 4.dp) {
+//                1.dp
+//            } else {
+//                8.dp
+//            }
+//        }, label = "AlertCard"
+//    )
+//    Card(elevation = animatedElevation.value) {
+    // Instead of restarting the animateDpAsState animation, we can use infinite
+    // animations.
+    // Infinite animations are a special case that Compose tests understand so
+    // they're not going to keep the test busy.
+    val infiniteElevationAnimation = rememberInfiniteTransition(
+        label = "AlertCard")
+    val animatedElevation: Dp by infiniteElevationAnimation.animateValue(
+        initialValue = 1.dp,
+        targetValue = 8.dp,
+        typeConverter = Dp.VectorConverter,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500),
+            repeatMode = RepeatMode.Reverse
+        ), label = "AlertCard"
     )
-    Card(elevation = animatedElevation.value) {
+    Card(elevation = animatedElevation) {
+        /* END-6 */
         Column {
             AlertHeader {
                 showDialog = true
